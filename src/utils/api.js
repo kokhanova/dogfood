@@ -1,5 +1,5 @@
 const onResponce = (res) => {
-    console.log(res);
+    // console.log(res);
     return res.ok ? res.json() : Promise.reject(`Ошибка: ${res.status}`);
 };
 
@@ -16,14 +16,20 @@ class Api {
     }
 
     getUserInfo() {
-        console.log(123);
+        // console.log(123);
         return fetch(`${this._baseUrl}/users/me`, {
             headers: this._headers,
         }).then(onResponce);
     }
 
+    getProductById(idProduct) {
+        return fetch(`${this._baseUrl}/products/${idProduct}`, {
+            headers: this._headers,
+        }).then(onResponce);
+    }
+
     setUserInfo(dataUser) {
-        console.log(123);
+        // console.log(123);
         return fetch(`${this._baseUrl}/users/me`, {
             method: "PATCH",
             headers: this._headers,

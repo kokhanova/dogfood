@@ -11,36 +11,45 @@ import SearchInfo from "../SearchInfo/searchInfo";
 import api from "../../utils/api";
 import useDebounce from "../../hooks/useDebounce";
 import { isLiked } from "../../utils/product";
+import Spinner from "../Spinner/spinner";
 
 function App() {
     const [cards, setCards] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentUser, setCurrentUser] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
     const debounceSearchQuery = useDebounce(searchQuery, 500);
 
     const handleRequest = () => {
+        setIsLoading(true);
         // const filterCards = cards.filter( item => item.name.toUpperCase().includes(searchQuery.toUpperCase()));
         // setCards(filterCards);
         api.search(debounceSearchQuery)
             .then((searchResult) => {
                 setCards(searchResult);
             })
-            .catch((err) => console.log(err));
+            .catch((err) => console.log(err))
+            .finally(() => {
+                setIsLoading(false);
+            });
     };
 
     useEffect(() => {
-        console.log(123);
+        setIsLoading(true);
         Promise.all([api.getProductList(), api.getUserInfo()])
             .then(([productData, userData]) => {
                 setCurrentUser(userData);
                 setCards(productData.products);
             })
-            .catch((err) => console.log(err));
+            .catch((err) => console.log(err))
+            .finally(() => {
+                setIsLoading(false);
+            });
     }, []);
 
     useEffect(() => {
         handleRequest();
-        console.log("INPUT", debounceSearchQuery);
+        // console.log("INPUT", debounceSearchQuery);
     }, [debounceSearchQuery]);
 
     const handleFormSubmit = (e) => {
@@ -65,8 +74,8 @@ function App() {
         api.changeLikeProduct(product._id, liked)
             .then((newCard) => {
                 const newProducts = cards.map(cardState => {
-                    console.log('Карточка из стейта', cardState);
-                    console.log('Карточка с сервера', newCard);
+                    // console.log('Карточка из стейта', cardState);
+                    // console.log('Карточка с сервера', newCard);
                     return cardState._id === newCard._id ? newCard : cardState;
                 })
 
@@ -76,7 +85,7 @@ function App() {
 
     return (
         <>
-            <Header user={currentUser} onUpdateUser={handleUpdateUser}>
+            <Header>
                 <>
                     <Logo className="logo logo_place_header" href="/" />
                     <Search
@@ -93,10 +102,13 @@ function App() {
                 />
                 <Sort />
                 <div className="content__cards">
-                    <CardList goods={cards} onProductLike={handleProductLike} currentUser={currentUser}/>
-                </div>
+                    {isLoading 
+                    ? <Spinner/>
+                    : <CardList goods={cards} onProductLike={handleProductLike} currentUser={currentUser}/>
+                    }
+                    </div>
             </main>
-            <Footer />
+            <Footer/>
         </>
     );
 }
